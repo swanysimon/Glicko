@@ -2,7 +2,7 @@
 -- Simon Swanson
 -- mostly helper functions
 
-module Rating (Glicko(..), res, team, rating, dev, time, tup1, tup2, tup3, upList, newList, findTeam, runGlicko, c, n) where
+module Rating (Glicko(..), tup1, tup2, tup3, upList, newList, findTeam, runGlicko, c, n, updateGlicko) where
 
 import System.Environment
 import System.IO
@@ -45,7 +45,6 @@ c s = case map toLower s of
     "mlb" -> 54.77
     "nba" ->59.41
     "d" -> 0.5
-    "nhl" -> 63.25
     "q" -> 0.0057565
     "w" -> 1
     _ -> 0
@@ -55,7 +54,6 @@ n :: String -> Integer
 n s = case map toLower s of
     "nba" -> 15
     "mlb" -> 10
-    "nhl" -> 12
     _ -> 0
 
 -- the default ranking for a new team
@@ -84,6 +82,28 @@ upList g gs = (take (length x - 1) x) ++ g : y where
         Nothing -> 0
 
 
+-- updates the Glicko for each team in a game. ugly function
+updateGlicko :: [[[String]]] -> [Glicko] -> [Glicko]
+updateGlicko xs gs | null xs = gs
+    | xs == [[]] = gs
+    | xs == [[[]]] = gs
+    | (w1, g1, [rating t2, dev t2]) `elem` res t1 = updateGlicko (tail xs) gs
+    | otherwise = updateGlicko (tail xs) (upList (mkTeam t1 w1 g1 t2) (upList (mkTeam t2 w2 g2 t1) gs)) where
+        t1 = (findTeam gs . head . head . head) xs
+        t2 = (findTeam gs . head . last . head) xs
+        w1 = (last . head . head) xs
+        w2 = (last . last . head) xs
+        g1 = read ((head $ head xs) !! 1) :: Int
+        g2 = read ((last $ head xs) !! 1) :: Int
+        mkTeam r1 w g r2 = Glicko {
+            team = team r1,
+            rating = rating r1,
+            dev = dev r1,
+            time = time r1,
+            res = (w, g, [rating r2, dev r2]) : res r1
+        }
+
+
 -- retrieves the new rating for a team, given the sport name and its Glicko data
 runGlicko :: String -> Glicko -> Glicko
 runGlicko s g = Glicko {team = team g, rating = rnd $ newRating devg, dev = rnd $ newDev devg, time = time devg, res = []} where
@@ -103,7 +123,7 @@ runGlicko s g = Glicko {team = team g, rating = rnd $ newRating devg, dev = rnd 
 newRating :: Glicko -> Double
 newRating g = maximum [100, rating g + c "q" / (1 / (dev g) ^ 2 + 1 / dSquared g) * summation (res g)] where
     summation xs | null xs = 0
-        | otherwise = gRD (last $ tup3 $ head xs) * (c (tup1 $ head xs) - eSR g (tup3 $ head xs)) + summation (tail xs)
+        | otherwise = gRD (last $ tup3 $ head xs) * (c (filter isAlpha $ tup1 $ head xs) - eSR g (tup3 $ head xs)) + summation (tail xs)
 
 
 -- calculates the new deviation for a team, making sure it never drops below 30 and isn't greater than 350
