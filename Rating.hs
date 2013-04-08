@@ -24,7 +24,7 @@ data Glicko = Glicko {
 instance Ord Glicko where
     g1 `compare` g2 = (rating g1) `compare` (rating g2)
 
--- teams should be distinguished by their name. makes life so much easier when using upList. bad Haskell to compare different parts of the data type for Ord and Eq? Maybe. But it works
+-- teams should be distinguished by their name. makes life so much easier when using upList. bad Haskell to compare different parts of the data type for Ord and Eq? Maybe. But it works so I'm happy
 instance Eq Glicko where
     g1 == g2 = team g1 == team g2
 
@@ -82,7 +82,7 @@ upList g gs = (take (length x - 1) x) ++ g : y where
         Nothing -> 0
 
 
--- updates the Glicko for each team in a game. ugly function
+-- updates the Glicko for each team using the game statistics. ugly function but entirely necessary
 updateGlicko :: [[[String]]] -> [Glicko] -> [Glicko]
 updateGlicko xs gs | null xs = gs
     | xs == [[]] = gs
@@ -95,29 +95,19 @@ updateGlicko xs gs | null xs = gs
         w2 = (last . last . head) xs
         g1 = read ((head $ head xs) !! 1) :: Int
         g2 = read ((last $ head xs) !! 1) :: Int
-        mkTeam r1 w g r2 = Glicko {
-            team = team r1,
-            rating = rating r1,
-            dev = dev r1,
-            time = time r1,
-            res = (w, g, [rating r2, dev r2]) : res r1
-        }
+        mkTeam r1 w g r2 = r1 {res = (w, g, [rating r2, dev r2]) : res r1}
 
 
 -- retrieves the new rating for a team, given the sport name and its Glicko data
 runGlicko :: String -> Glicko -> Glicko
 runGlicko s g = Glicko {team = team g, rating = rnd $ newRating devg, dev = rnd $ newDev devg, time = time devg, res = []} where
     rnd = fromIntegral . round
-    devg = Glicko {
-        team = team g,
-        rating = rating g,
+    devg = g {
         dev = minimum [350, sqrt ((dev g) ^ 2 + time g * (c s) ^ 2)],
-        res = res g,
         time = case res g of
             [] -> time g + 1
             _ -> 1
-    }
-
+        }
 
 -- calculates the new rating for a team, making sure it never drops below 100
 newRating :: Glicko -> Double
