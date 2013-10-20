@@ -175,7 +175,7 @@ main = do
             checkEval curDate oldDate league teams eval
 
         4 -> case last args of
-            "start" -> do
+            "begin" -> do
                 let c = read (args !! 2) :: (Integer, Int, Int)
                 let curDate = fromGregorian (tup1 c) (tup2 c) (tup3 c)
                 let g = read (args !! 1) :: (Integer, Int, Int)
@@ -188,7 +188,7 @@ main = do
                 putStrLn $ "Evaluating from " ++ (showGregorian oldDate) ++ " to " ++ (showGregorian curDate)
                 checkEval curDate oldDate league team (addDays (-1) oldDate)
 
-            "end" -> do
+            "finish" -> do
                 let c = read (args !! 2) :: (Integer, Int, Int)
                 let curDate = fromGregorian (tup1 c) (tup2 c) (tup3 c)
                 let g = read (args !! 1) :: (Integer, Int, Int)
