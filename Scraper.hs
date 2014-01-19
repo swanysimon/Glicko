@@ -1,6 +1,6 @@
 ----
 ----
--- Rating.hs
+-- Scraper.hs
 -- Haskell program implementing the Glicko rating system
 -- contains only computational functions and
 --      the data type used to store information
@@ -14,7 +14,7 @@
 
 module Main where
 
--- Rating.hs must be in the same directory as Scraper.hs, as it provides most of the computational functions
+-- Scraper.hs must be in the same directory as Rating.hs, as it provides most of the computational functions
 import Rating
 
 import Control.Monad
@@ -40,7 +40,7 @@ checkEval curDate oldDate league teams eval = case diffDays oldDate eval of
     1 -> do
         let updatedTeams = map (runGlicko league) teams
         let updatedEval = addDays (n league) eval
-        putStrLn $ "Ratings updated as of " ++ (showGregorian eval) ++"."
+        putStrLn $ "Ratings updated as of " ++ (showGregorian eval) ++ "."
         scrape curDate oldDate league updatedTeams updatedEval
     _ -> scrape curDate oldDate league teams eval
 
