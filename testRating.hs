@@ -1,0 +1,7 @@
+----
+----
+-- testRating.hs
+-- test cases to make sure that Rating.hs works as expected
+-- created by Simon Swanson
+----
+----
